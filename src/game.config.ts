@@ -11,7 +11,7 @@ export const GameConfig : IGameConfig = {
 
     timeoutToHideBallAfterPocket: 100,
 
-    loadingScreenTimeout: 5000,
+    loadingScreenTimeout: 0,
 
     loadingScreenImagePosition: { x: 450, y: 112.5 },
 
@@ -23,7 +23,7 @@ export const GameConfig : IGameConfig = {
             color: '#126736',
             font: '70px Impact',
             alignment: 'top',
-            text: 'PLAYER ',
+            text: 'JOAO',
         },
         overalScores: [
             {
@@ -165,14 +165,14 @@ export const GameConfig : IGameConfig = {
         
         labels: [
             {
-                text: 'Classic 8-Ball',
+                text: 'Chupino Classic 8-Ball',
                 position: { x: 200, y: 100 },
                 font: '100px Bookman',
                 color: 'white',
                 alignment: 'left',
             },
             {
-                text: `© ${new Date().getFullYear()} Chen Shmilovich`,
+                text: `© ${new Date().getFullYear()} Anonymous Stoners`,
                 position: { x: 1250, y: 800 },
                 font: '20px Bookman',
                 color: 'white',

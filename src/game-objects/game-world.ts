@@ -27,9 +27,10 @@ const sprites: IAssetsConfig = GameConfig.sprites;
 const sounds: IAssetsConfig = GameConfig.sounds;
 
 export class GameWorld {
-
+    
     //------Members------//
-
+    
+    private matrizFinal: (number | null)[][] = new Array(37).fill(null).map(() => new Array(20).fill(null));
     private _stick: Stick;
     private _cueBall: Ball;
     private _8Ball: Ball;
@@ -289,11 +290,6 @@ export class GameWorld {
 
         const foul = !this._turnState.isValid;
 
-        if (this.isGameOver) {
-            this.handleGameOver();
-            return;
-        }
-
         if(!this._cueBall.visible){
             this._cueBall.show(Vector2.copy(GameConfig.cueBallPosition));
         }
@@ -310,6 +306,11 @@ export class GameWorld {
 
         if (this.isAITurn()) {
             AI.startSession(this);
+        }
+
+        if (this.isGameOver) {
+            this.handleGameOver();
+            return;
         }
     }
 
@@ -357,24 +358,23 @@ export class GameWorld {
     }
 
     private isAITurn(): boolean {
-        return AI.finishedSession && aiConfig.on && this._currentPlayerIndex === aiConfig.playerIndex;
+        //return AI.finishedSession && aiConfig.on && this._currentPlayerIndex === aiConfig.playerIndex;
+        return true;
     }
-
-    //------Public Methods------//
-
-    public initMatch(): void {
+    public async initMatch(): Promise<void> {
 
         const redBalls: Ball[] = GameConfig.redBallsPositions
-            .map((position: Vector2) => new Ball(Vector2.copy(position), Color.yellow));
+            .map((position: Vector2) => new Ball(Vector2.copy(position), Color.white));
 
         const yellowBalls: Ball[] = GameConfig.yellowBallsPositions
-            .map((position: Vector2) => new Ball(Vector2.copy(position), Color.red));
+            .map((position: Vector2) => new Ball(Vector2.copy(position), Color.white));
         
-        this._8Ball = new Ball(Vector2.copy(GameConfig.eightBallPosition), Color.black);
+        this._8Ball = new Ball(Vector2.copy(GameConfig.eightBallPosition), Color.white);
 
         this._cueBall = new Ball(Vector2.copy(GameConfig.cueBallPosition), Color.white);
 
         this._stick = new Stick(Vector2.copy(GameConfig.cueBallPosition));
+
 
         this._balls = [
             ...redBalls, 
@@ -395,7 +395,45 @@ export class GameWorld {
         if (this.isAITurn()) {
             AI.startSession(this);
         }
+
+        await this.setMatrix();
+        
+        console.log(this.matrizFinal)
     }
+
+    private async setMatrix(){
+        const filas = 37;
+        const columnas = 20;
+        const anchoMesa = 1423;
+        const altoMesa = 762;
+        const anchoCelda = anchoMesa / columnas;
+        const altoCelda = altoMesa / filas;
+
+        
+        for (const ball of this.balls) {/* 
+            if(!ball.visible)
+                continue; */
+            const posicionBola = this.calcularPosicionBola(ball.position.x, ball.position.y, anchoCelda, altoCelda);
+            if (posicionBola !== null) {
+                const [fila, columna] = posicionBola;
+                this.matrizFinal[fila][columna] = 1; // Marcar la posición como ocupada (o el valor que prefieras)
+            }
+        }
+
+    }
+
+    private calcularPosicionBola(x: number, y: number, anchoCelda: number, altoCelda: number): [number, number] | null {
+        const fila = Math.floor(y / altoCelda);
+        const columna = Math.floor(x / anchoCelda);
+    
+        if (fila >= 0 && columna >= 0) {
+            return [fila, columna];
+        } else {
+            return null; // La bola está fuera de la matriz
+        }
+    }
+
+
 
     public isValidPosToPlaceCueBall(position: Vector2): boolean {
         let noOverlap: boolean =  this._balls.every((ball: Ball) => {

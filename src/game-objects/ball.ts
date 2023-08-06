@@ -95,6 +95,7 @@ export class Ball {
         this._position = position;
         this._velocity = Vector2.zero;
         this._visible = true;
+        
     }
 
     public hide(): void {
@@ -111,6 +112,7 @@ export class Ball {
             if(this._velocity.length < ballConfig.minVelocityLength) {
                 this.velocity = Vector2.zero;
                 this._moving = false;
+                //Acabar juego 
             }
         }
     }

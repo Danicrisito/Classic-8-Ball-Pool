@@ -14,6 +14,7 @@ import { Keyboard } from './input/keyboard';
 import { Canvas2D } from './canvas';
 import { Mouse } from './input/mouse';
 import { IAssetsConfig, IInputConfig } from './game.config.type';
+import * as fs from 'fs';
 
 //------Configurations------//
 
@@ -30,6 +31,7 @@ export class Game {
     private _poolGame: GameWorld;
     private _isLoading: boolean;
     private _inGame: boolean;
+    private fileReader = new FileReader();
 
     //------Private Methods------//
 
@@ -98,10 +100,10 @@ export class Game {
     }
 
     //------Public Methods------//
+    
 
     public async init(): Promise<void> {
         await Assets.loadGameAssets();
-
         this.initMenuActions();
         this.initMainMenu();
         this._menu.active = true;

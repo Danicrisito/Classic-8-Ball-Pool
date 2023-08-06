@@ -49,8 +49,9 @@ export class Referee {
     }
 
     public isGameOver(currentPlayer: Player, cueBall: Ball, eightBall: Ball): boolean {
-        return !eightBall.visible || 
+        /* return !eightBall.visible || 
                (!cueBall.visible && currentPlayer.matchScore === 7) ||
-               (!cueBall.visible && currentPlayer.matchScore === 8)
+               (!cueBall.visible && currentPlayer.matchScore === 8) */
+        return true;
     }
 }
