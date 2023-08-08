@@ -112,9 +112,11 @@ export class Ball {
             if(this._velocity.length < ballConfig.minVelocityLength) {
                 this.velocity = Vector2.zero;
                 this._moving = false;
+
                 //Acabar juego 
             }
         }
+
     }
 
     public draw(): void {
