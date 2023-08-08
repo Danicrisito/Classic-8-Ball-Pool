@@ -20,6 +20,8 @@ import * as fs from 'fs';
 
 const sprites: IAssetsConfig = GameConfig.sprites;
 const inputConfig: IInputConfig = GameConfig.input;
+const sounds: IAssetsConfig = GameConfig.sounds;
+
 
 export class Game {
 
@@ -104,11 +106,13 @@ export class Game {
 
     public async init(): Promise<void> {
         await Assets.loadGameAssets();
+        
         this.initMenuActions();
         this.initMainMenu();
         this._menu.active = true;
         this._poolGame = new GameWorld();
         this.gameLoop();
+        
     }
 
     public goToSubMenu(index: number): void {

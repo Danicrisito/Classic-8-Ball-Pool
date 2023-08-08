@@ -5,7 +5,7 @@ export const GameConfig : IGameConfig = {
 
     gameSize: { x: 1500, y: 825 },
 
-    soundOn: true,
+    soundOn: false,
 
     timeoutToHideStickAfterShot: 500,
 
@@ -115,6 +115,7 @@ export const GameConfig : IGameConfig = {
             ballsCollide: 'BallsCollide.wav',
             strike: 'Strike.wav',
             rail: 'Hole.wav',
+            sunrise: 'Sunrise.wav',
         }
     },
 
