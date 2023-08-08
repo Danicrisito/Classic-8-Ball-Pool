@@ -423,14 +423,14 @@ export class GameWorld {
     }
 
     private async setMatrix() {
-        const filas = 37;
-        const columnas = 20;
+        const filas = 20; // Swap rows and columns
+        const columnas = 37; // Swap rows and columns
         const anchoMesa = 1423;
         const altoMesa = 762;
         const anchoCelda = anchoMesa / columnas;
         const altoCelda = altoMesa / filas;
         
-        let data: (number | null)[][] = new Array(37).fill(0).map(() => new Array(20).fill(0)); 
+        let data: (number | null)[][] = new Array(20).fill(0).map(() => new Array(37).fill(0)); //Swap rows and columns 
 
 
         for (const ball of this.balls) {
