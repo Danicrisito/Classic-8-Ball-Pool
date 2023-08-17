@@ -10,6 +10,12 @@ import { Mouse } from '../input/mouse';
 const aiConfig: IAIConfig = GameConfig.ai;
 const stickConfig: IStickConfig = GameConfig.stick;
 
+export interface ShotConfigurationDto{
+    power:number,
+    rotation:number
+}
+
+
 export class AITrainer {
 
     private _policy: AIPolicy;
@@ -31,8 +37,7 @@ export class AITrainer {
     }
 
     private placeBallInHand(gameWorld: GameWorld): void {
-        debugger;
-        
+
         let marginX = 5;
         let pos = Vector2.copy(GameConfig.cueBallPosition);
 
@@ -75,13 +80,17 @@ export class AITrainer {
         return new AIOpponent(power, rotation);
     }
 
-    private train(): void {
+    private train(): ShotConfigurationDto  {
 
         if(this._iteration === aiConfig.trainIterations){
             GameConfig.soundOn = this._soundOnState;
             this.playTurn();
             this._finishedSession = true;
-            return;
+            const shot_configuration : ShotConfigurationDto = {
+                power: this._bestOpponent.power,
+                rotation :this._bestOpponent.rotation
+            }
+            return shot_configuration;
         }
 
         if(this._gameWorld.isBallsMoving) return;
@@ -119,22 +128,28 @@ export class AITrainer {
         this._initialGameWorld.shootCueBall(this._bestOpponent.power, this._bestOpponent.rotation);
     }
 
+    public playTurnWithInput(power:number, rotation:number){
+        this._initialGameWorld.shootCueBall(power, rotation);
+
+    }
+
     public simulate(): void {
         this._gameWorld.shootCueBall(this._currentOpponent.power, this._currentOpponent.rotation);
     }
 
-    public opponentTrainingLoop(): void {
-
+    public opponentTrainingLoop(): ShotConfigurationDto {
+        let shot_config ;
         while(!this._finishedSession){
-            this.train();
+            shot_config = this.train();
             this._gameWorld.update();
         }
 
         Mouse.reset();
+        return shot_config;
 
     }
 
-    public startSession(gameWorld: GameWorld): void {
+    public startSession(gameWorld: GameWorld): ShotConfigurationDto {
         this._soundOnState = GameConfig.soundOn;
         GameConfig.soundOn = false;
         if(gameWorld.isBallInHand) {
@@ -144,9 +159,25 @@ export class AITrainer {
         this._gameWorld = cloneDeep(gameWorld);
         this.init();
         this._finishedSession = false;
-
         this.simulate();
-        this.opponentTrainingLoop();
+        return this.opponentTrainingLoop();
+    }
+
+
+    public startSessionBestShots(gameWorld: GameWorld , shot_config:ShotConfigurationDto){
+        this._soundOnState = GameConfig.soundOn;
+        GameConfig.soundOn = false;
+        this.placeBallInHand(gameWorld);
+        this.playTurnWithInput(shot_config.power, shot_config.rotation);
+        this._gameWorld.update();
+    }
+
+    public testPrediction(gameWorld: GameWorld , shot_config: ShotConfigurationDto){
+        this._soundOnState = GameConfig.soundOn;
+        GameConfig.soundOn = false;
+        this.placeBallInHand(gameWorld);
+        this.playTurnWithInput(shot_config.power, shot_config.rotation);
+        this._gameWorld.update();
     }
 }
 

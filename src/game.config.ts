@@ -33,7 +33,7 @@ export const GameConfig : IGameConfig = {
                 alignment: 'top'
             },
             {
-                position: { x: 778, y: 460 },
+                position: { x: 1500, y:1500 },
                 color: '#126736',
                 font: '200px Impact',
                 alignment: 'top'
@@ -87,6 +87,10 @@ export const GameConfig : IGameConfig = {
             twoPlayersButtonHovered : '2_players_button_hover.png',
             onePlayerButton : '1_player_button.png',
             onePlayerButtonHovered : '1_player_button_hover.png',
+            bestShots : 'bestShots.png',
+            bestShotsHovered : 'bestShotsHovered.png',
+            predictions:'predictions.png',
+            predictionsHovered:'predictionsHovered.png',
             muteButton : 'mute_button.png',
             muteButtonHovered : 'mute_button_hover.png',
             muteButtonPressed : 'mute_button_pressed.png',
@@ -194,6 +198,22 @@ export const GameConfig : IGameConfig = {
                 position: { x: 200, y: 400 },
                 sprite: 'onePlayerButton', 
                 spriteOnHover: 'onePlayerButtonHovered', 
+            },
+
+            { 
+                action: MenuActionType.BEST_SHOTS,
+                value: 0,
+                position: { x: 800, y: 400 },
+                sprite: 'bestShots', 
+                spriteOnHover: 'bestShotsHovered', 
+            },
+
+            { 
+                action: MenuActionType.PREDICTION,
+                value: 0,
+                position: { x: 900, y: 50 },
+                sprite: 'predictions', 
+                spriteOnHover: 'predictionsHovered', 
             },
             { 
                 action: MenuActionType.ToggleSound,

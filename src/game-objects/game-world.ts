@@ -1,5 +1,5 @@
-import { IInputConfig, IBallConfig, ITableConfig, IVector2, IPhysicsConfig, IAssetsConfig, ILabelsConfig, IMatchScoreConfig, IAIConfig } from './../game.config.type';
-import { AI } from './../ai/ai-trainer';
+import { IInputConfig, IBallConfig, ITableConfig, IVector2, IPhysicsConfig, IAssetsConfig, ILabelsConfig, IMatchScoreConfig, IAIConfig, Score, Prediction } from './../game.config.type';
+import { AI, ShotConfigurationDto } from './../ai/ai-trainer';
 import { mapRange } from '../common/helper';
 import { Referee } from './referee';
 import { Player } from './player';
@@ -38,7 +38,11 @@ export class GameWorld {
     private _currentPlayerIndex = 0;
     private _turnState: State;
     private _referee: Referee;
-
+    private _bestShots: Score[];
+    private _predictions: Prediction[];
+    private _currentBestShot = 0;
+    private _currentPrediction = 0;
+    private _ballsCollided = false;
     //------Properties------//
 
     public get currentPlayer(): Player {
@@ -219,6 +223,8 @@ export class GameWorld {
                 const collided = this.resolveBallsCollision(firstBall, secondBall);
 
                 if (collided) {
+                    console.log("collided")
+                    this._ballsCollided = true;
                     const force: number = firstBall.velocity.length + secondBall.velocity.length
                     const volume: number = mapRange(force, 0, ballConfig.maxExpectedCollisionForce, 0, 1);
                     Assets.playSound(sounds.paths.ballsCollide, volume);
@@ -275,19 +281,35 @@ export class GameWorld {
         }
     }
 
-    private async handleGameOver(): Promise<void> {
+    private async handleGameOver(shot_config: ShotConfigurationDto): Promise<void> {
         if (this._turnState.isValid) {
             this.currentPlayer.overallScore++;
         }
         else {
             this.nextPlayer.overallScore++;
         }
-        await this.setMatrix();
+        await this.setMatrix(shot_config);
+
+        if (this._bestShots) {
+            this.initBestShots();
+            return;
+        }
         this.initMatch();
+
+
+    }
+
+    private async nextBestShot(): Promise<void> {
+
+        this.currentPlayer.overallScore = this._bestShots[this._currentBestShot].similarity;
+        this.initBestShots();
+        this._bestShots = null;
+        return;
+
+
     }
 
     private async nextTurn(): Promise<void> {
-
         const foul = !this._turnState.isValid;
 
         if (!this._cueBall.visible) {
@@ -303,14 +325,26 @@ export class GameWorld {
 
         this._turnState = new State();
         this._turnState.ballInHand = foul;
+        let shot_config;
+
+
+        if (this._bestShots) {
+            this.nextBestShot()
+            AI.startSessionBestShots(this,
+                {
+                    power: this._bestShots[this._currentBestShot].shot_configuration.power,
+                    rotation: this._bestShots[this._currentBestShot].shot_configuration.rotation
+                });
+            return;
+        }
 
         if (this.isAITurn()) {
-            AI.startSession(this);
+            shot_config = AI.startSession(this);
+
         }
-        
 
         if (this.isGameOver) {
-            this.handleGameOver();
+            this.handleGameOver(shot_config);
             return;
         }
     }
@@ -363,7 +397,7 @@ export class GameWorld {
         return true;
     }
     public async initMatch(): Promise<void> {
-
+        this._ballsCollided = false
         const redBalls: Ball[] = GameConfig.redBallsPositions
             .map((position: Vector2) => new Ball(Vector2.copy(position), Color.white));
 
@@ -397,45 +431,162 @@ export class GameWorld {
             AI.startSession(this);
         }
 
+    }
+
+    public async testPredictions(): Promise<void> {
+        const redBalls: Ball[] = GameConfig.redBallsPositions
+            .map((position: Vector2) => new Ball(Vector2.copy(position), Color.white));
+
+        const yellowBalls: Ball[] = GameConfig.yellowBallsPositions
+            .map((position: Vector2) => new Ball(Vector2.copy(position), Color.white));
+
+        this._8Ball = new Ball(Vector2.copy(GameConfig.eightBallPosition), Color.white);
+
+        this._cueBall = new Ball(Vector2.copy(GameConfig.cueBallPosition), Color.white);
+
+        this._stick = new Stick(Vector2.copy(GameConfig.cueBallPosition));
+
+        this._balls = [
+            ...redBalls,
+            ...yellowBalls,
+            this._8Ball,
+            this._cueBall,
+        ];
+
+        await this.getPredictions();
+
+        console.log(this._predictions[this._currentPrediction])
+        console.log(this._predictions[this._currentPrediction])
+        console.log(this._predictions[this._currentPrediction].shot_configuration.rotation)
+        console.log(this._predictions[this._currentPrediction]['shot_configuration'].rotation)
+        AI.startSessionBestShots(this, {
+            power: this._predictions[this._currentPrediction]['shot_configuration'].power,
+            rotation: this._predictions[this._currentPrediction]['shot_configuration'].rotation
+        });
+        this._currentPrediction++;
+        if (this._currentPrediction >= this._bestShots.length) {
+            this._currentPrediction = 0
+        }
+
 
     }
 
-    private async getCorrelation(data: any) {
-        console.log(data)
 
-        fetch('http://localhost:5000/calculate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ array: data }),
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Resultado recibido desde Python:', data.result);
-                return data.result;
+
+    public async initBestShots(): Promise<void> {
+        const redBalls: Ball[] = GameConfig.redBallsPositions
+            .map((position: Vector2) => new Ball(Vector2.copy(position), Color.white));
+
+        const yellowBalls: Ball[] = GameConfig.yellowBallsPositions
+            .map((position: Vector2) => new Ball(Vector2.copy(position), Color.white));
+
+        this._8Ball = new Ball(Vector2.copy(GameConfig.eightBallPosition), Color.white);
+
+        this._cueBall = new Ball(Vector2.copy(GameConfig.cueBallPosition), Color.white);
+
+        this._stick = new Stick(Vector2.copy(GameConfig.cueBallPosition));
+
+        this._balls = [
+            ...redBalls,
+            ...yellowBalls,
+            this._8Ball,
+            this._cueBall,
+        ];
+        console.log("antes if de this.bestshots", this._bestShots)
+
+        await this.getBestShots();
+
+
+        console.log("preStartSessionBestShots", this._bestShots[this._currentBestShot].shot_configuration.power, this._bestShots[this._currentBestShot].shot_configuration.rotation)
+        AI.startSessionBestShots(this, {
+            power: this._bestShots[this._currentBestShot].shot_configuration.power,
+            rotation: this._bestShots[this._currentBestShot].shot_configuration.rotation
+        });
+        this._currentBestShot++;
+        console.log(this._bestShots)
+        console.log(this._bestShots.length)
+        if (this._currentBestShot >= this._bestShots.length) {
+            this._currentBestShot = 0
+        }
+    }
+    private async getBestShots() {
+
+        // Construir la URL con los parámetros
+        const url = new URL('http://localhost:5000/bestShots');
+
+        const response = await fetch(url.toString());
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        console.log(data);
+        this._bestShots = data;
+        console.log('Resultado recibido desde Python:', this._bestShots);
+    }
+
+    public async getPredictions(): Promise<void> {
+
+        // Construir la URL con los parámetros
+        const url = new URL('http://localhost:5000/prediction');
+
+        const response = await fetch(url.toString());
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const data = await response.json();
+
+        console.log(data);
+        this._predictions = data;
+        console.log('Resultado recibido desde Python:', this._bestShots);
+    }
+
+
+
+    private async getCorrelation(data: any, shot_config: ShotConfigurationDto) {
+        console.log("balls collided", this._ballsCollided)
+
+        if (this._ballsCollided) {
+            fetch('http://localhost:5000/calculate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    array: data, shot_configuration: {
+                        power: shot_config.power,
+                        rotation: shot_config.rotation
+                    }
+                }),
             })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Resultado recibido desde Python:', data.result);
+                    return data.result;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
 
 
     }
 
-    private async setMatrix() {
+    private async setMatrix(shot_config: ShotConfigurationDto) {
         const filas = 20; // Swap rows and columns
         const columnas = 37; // Swap rows and columns
         const anchoMesa = 1423;
         const altoMesa = 762;
         const anchoCelda = anchoMesa / columnas;
         const altoCelda = altoMesa / filas;
-        
+
         let data: (number | null)[][] = new Array(20).fill(0).map(() => new Array(37).fill(0)); //Swap rows and columns 
 
 
         for (const ball of this.balls) {
-            if(!ball.visible)
-                continue; 
+            if (!ball.visible)
+                continue;
 
             const posicionBola = this.calcularPosicionBola(ball.position.x, ball.position.y, anchoCelda, altoCelda);
             if (posicionBola !== null) {
@@ -443,8 +594,8 @@ export class GameWorld {
                 data[fila][columna] = 255; // Marcar la posición como ocupada (o el valor que prefieras)
             }
         }
-        
-        this.getCorrelation(data);
+
+        this.getCorrelation(data, shot_config);
 
     }
 
@@ -506,13 +657,32 @@ export class GameWorld {
         }
     }
 
+    public nextPrediction(): void {
+
+        if (this.isBallInHand) {
+            this.handleBallInHand();
+            return;
+        }
+        this.handleBallsInPockets();
+        this.handleCollisions();
+        this.handleInput();
+        this._stick.update();
+        this._balls.forEach((ball: Ball) => ball.update());
+
+        if (!this.isBallsMoving && !this._stick.visible) {
+
+            this.currentPlayer.overallScore = this._bestShots[this._currentBestShot].similarity;
+            this.testPredictions();
+            return;
+        }
+    }
+
     public update(): void {
 
         if (this.isBallInHand) {
             this.handleBallInHand();
             return;
         }
-
         this.handleBallsInPockets();
         this.handleCollisions();
         this.handleInput();
@@ -521,6 +691,13 @@ export class GameWorld {
 
         if (!this.isBallsMoving && !this._stick.visible) {
             this.concludeTurn();
+            console.log("conclude turn", this._bestShots)
+
+            if (this._bestShots) {
+                this.nextBestShot();
+                return;
+            }
+
             this.nextTurn();
         }
     }

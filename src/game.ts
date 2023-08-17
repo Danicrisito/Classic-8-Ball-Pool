@@ -15,6 +15,8 @@ import { Canvas2D } from './canvas';
 import { Mouse } from './input/mouse';
 import { IAssetsConfig, IInputConfig } from './game.config.type';
 import * as fs from 'fs';
+import { BestShots } from './menu/commands/best-shots-commands';
+import { TestPrediction } from './menu/commands/test-prediction';
 
 //------Configurations------//
 
@@ -41,6 +43,8 @@ export class Game {
         this._menuActionsMap = new Map<MenuActionType, IMenuCommand>();
         this._menuActionsMap.set(MenuActionType.PVP, new PVPCommand(this));
         this._menuActionsMap.set(MenuActionType.PVC, new PVCCommand(this));
+        this._menuActionsMap.set(MenuActionType.BEST_SHOTS, new BestShots(this));
+        this._menuActionsMap.set(MenuActionType.PREDICTION, new TestPrediction(this))
         this._menuActionsMap.set(MenuActionType.ToggleSound, new ToggleSoundCommand());
         this._menuActionsMap.set(MenuActionType.GoToSubMenu, new GoToSubMenuCommand(this));
         this._menuActionsMap.set(MenuActionType.GoToPreviousMenu, new GoToPreviousMenuCommand(this));
@@ -142,6 +146,23 @@ export class Game {
             this._inGame = true;
             this._poolGame = new GameWorld();
             this._poolGame.initMatch();
+        });
+    }
+
+    public startBestShots():void{
+        this.displayLoadingScreen().then(() => {
+            this._menu.active = false;
+            this._inGame = true;
+            this._poolGame = new GameWorld();
+            this._poolGame.initBestShots();
+        });
+    }
+
+    public testPrediction():void{
+        this.displayLoadingScreen().then(() => {
+            this._menu.active = false;
+            this._inGame = true;
+            this._poolGame.testPredictions();
         });
     }
 }

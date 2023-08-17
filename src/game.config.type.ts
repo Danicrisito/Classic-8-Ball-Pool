@@ -121,3 +121,21 @@ export interface IAIConfig {
     shotPowerMutationVariance: number;
     minShotPower:              number;
 }
+
+export interface ShotConfiguration{
+    rotation:           number;
+    power:              number;
+}
+
+export interface Score {
+    hamming_distance:   number;
+    shot_configuration: ShotConfiguration;
+    shot_hash:          number;
+    similarity:         number;         
+}
+
+export interface Prediction{
+    prediction:Prediction;
+    shot_configuration : ShotConfiguration;
+    analized:boolean;
+}
