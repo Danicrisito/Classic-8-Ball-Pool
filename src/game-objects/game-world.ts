@@ -227,7 +227,7 @@ export class GameWorld {
                     this._ballsCollided = true;
                     const force: number = firstBall.velocity.length + secondBall.velocity.length
                     const volume: number = mapRange(force, 0, ballConfig.maxExpectedCollisionForce, 0, 1);
-                    Assets.playSound(sounds.paths.ballsCollide, volume);
+                    Assets.playSound(sounds.paths.ballsCollide, (volume * 0.05));
 
                     if (!this._turnState.firstCollidedBallColor) {
                         const color: Color = firstBall.color === Color.white ? secondBall.color : firstBall.color;

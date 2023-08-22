@@ -218,8 +218,8 @@ export const GameConfig : IGameConfig = {
             { 
                 action: MenuActionType.ToggleSound,
                 position: { x: 1430, y: 10 },
-                sprite: 'muteButton', 
-                spriteOnHover: 'muteButtonHovered', 
+                sprite: 'muteButtonPressed', 
+                spriteOnHover: 'muteButtonPressedHovered', 
             },
         ],
 

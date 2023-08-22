@@ -76,6 +76,17 @@ class Assets_Singleton {
             sound.play();
         }
     }
+
+    public playGameSoundtrack(volume: number): void {
+        if (GameConfig.soundOn) {
+            const soundtrack = this.getSound(sounds.paths.sunrise);
+            soundtrack.volume = volume;
+            soundtrack.loop = true;
+            soundtrack.play();
+            
+        }
+
+    }
 }
 
 export const Assets = new Assets_Singleton();

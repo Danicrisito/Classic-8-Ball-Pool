@@ -145,6 +145,7 @@ export class Game {
             this._menu.active = false;
             this._inGame = true;
             this._poolGame = new GameWorld();
+            Assets.playGameSoundtrack(0.5);
             this._poolGame.initMatch();
         });
     }
@@ -154,6 +155,7 @@ export class Game {
             this._menu.active = false;
             this._inGame = true;
             this._poolGame = new GameWorld();
+            Assets.playGameSoundtrack(0.5);
             this._poolGame.initBestShots();
         });
     }
@@ -162,6 +164,7 @@ export class Game {
         this.displayLoadingScreen().then(() => {
             this._menu.active = false;
             this._inGame = true;
+            Assets.playGameSoundtrack(0.5);
             this._poolGame.testPredictions();
         });
     }
